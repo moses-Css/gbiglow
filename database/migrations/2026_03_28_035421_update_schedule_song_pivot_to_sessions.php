@@ -2,50 +2,61 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('schedule_song', function (Blueprint $table) {
-            // Conditional — index mungkin tidak ada di semua environment
             if (Schema::hasIndex('schedule_song', 'idx_schedule_song_order')) {
                 $table->dropIndex('idx_schedule_song_order');
             }
-            $table->dropColumn('schedule_id');
-
-            $table->foreignId('session_id')
-                ->after('id')
-                ->constrained('schedule_sessions')
-                ->cascadeOnDelete();
-
-            $table->unique(['session_id', 'song_id'], 'uq_session_song');
-            $table->index(['session_id', 'order'], 'idx_session_song_order');
+            if (Schema::hasColumn('schedule_song', 'schedule_id')) {
+                $table->dropColumn('schedule_id');
+            }
+            if (!Schema::hasColumn('schedule_song', 'session_id')) {
+                $table->foreignId('session_id')
+                    ->after('id')
+                    ->constrained('schedule_sessions')
+                    ->cascadeOnDelete();
+            }
+            if (!Schema::hasIndex('schedule_song', 'uq_session_song')) {
+                $table->unique(['session_id', 'song_id'], 'uq_session_song');
+            }
+            if (!Schema::hasIndex('schedule_song', 'idx_session_song_order')) {
+                $table->index(['session_id', 'order'], 'idx_session_song_order');
+            }
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
+        // Truncate required — existing rows reference session_id,
+        // cannot restore schedule_id FK constraint with live data
+        DB::table('schedule_song')->truncate();
+
         Schema::table('schedule_song', function (Blueprint $table) {
-            $table->dropUnique('uq_session_song');
-            $table->dropIndex('idx_session_song_order');
-            $table->dropForeign(['session_id']);
-            $table->dropColumn('session_id');
-
-            $table->foreignId('schedule_id')
-                ->after('id')
-                ->constrained('schedules')
-                ->cascadeOnDelete();
-
-            $table->unique(['schedule_id', 'song_id'], 'uq_schedule_song');
-            $table->index(['schedule_id', 'order'], 'idx_schedule_song_order');
+            if (Schema::hasIndex('schedule_song', 'idx_session_song_order')) {
+                $table->dropIndex('idx_session_song_order');
+            }
+            if (Schema::hasIndex('schedule_song', 'uq_session_song')) {
+                $table->dropUnique('uq_session_song');
+            }
+            if (Schema::hasColumn('schedule_song', 'session_id')) {
+                $table->dropColumn('session_id');
+            }
+            if (!Schema::hasColumn('schedule_song', 'schedule_id')) {
+                $table->unsignedBigInteger('schedule_id')->after('id');
+                $table->foreign('schedule_id', 'schedule_song_schedule_id_foreign')
+                    ->references('id')
+                    ->on('schedules')
+                    ->cascadeOnDelete();
+            }
+            if (!Schema::hasIndex('schedule_song', 'idx_schedule_song_order')) {
+                $table->index(['schedule_id', 'order'], 'idx_schedule_song_order');
+            }
         });
     }
 };
