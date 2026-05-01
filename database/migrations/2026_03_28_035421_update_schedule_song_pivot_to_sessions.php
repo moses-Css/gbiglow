@@ -10,8 +10,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('schedule_song', function (Blueprint $table) {
+            // Drop FK and constraints before dropping column
+            if (Schema::hasIndex('schedule_song', 'uq_schedule_song')) {
+                $table->dropUnique('uq_schedule_song');
+            }
             if (Schema::hasIndex('schedule_song', 'idx_schedule_song_order')) {
                 $table->dropIndex('idx_schedule_song_order');
+            }
+            if (Schema::hasForeign('schedule_song', 'schedule_song_schedule_id_foreign')) {
+                $table->dropForeign('schedule_song_schedule_id_foreign');
             }
             if (Schema::hasColumn('schedule_song', 'schedule_id')) {
                 $table->dropColumn('schedule_id');
