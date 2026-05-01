@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('schedule_song', function (Blueprint $table) {
-            $table->dropIndex('idx_schedule_song_order');
+            // Conditional — index mungkin tidak ada di semua environment
+            if (Schema::hasIndex('schedule_song', 'idx_schedule_song_order')) {
+                $table->dropIndex('idx_schedule_song_order');
+            }
             $table->dropColumn('schedule_id');
 
             $table->foreignId('session_id')
