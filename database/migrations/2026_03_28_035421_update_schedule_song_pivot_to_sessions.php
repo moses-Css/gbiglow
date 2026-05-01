@@ -17,7 +17,13 @@ return new class extends Migration
             if (Schema::hasIndex('schedule_song', 'idx_schedule_song_order')) {
                 $table->dropIndex('idx_schedule_song_order');
             }
-            if (Schema::hasForeign('schedule_song', 'schedule_song_schedule_id_foreign')) {
+            $foreignKeys = collect(DB::select("
+                SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS
+                WHERE TABLE_NAME = 'schedule_song'
+                AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+                AND CONSTRAINT_NAME = 'schedule_song_schedule_id_foreign'
+            "));
+            if ($foreignKeys->isNotEmpty()) {
                 $table->dropForeign('schedule_song_schedule_id_foreign');
             }
             if (Schema::hasColumn('schedule_song', 'schedule_id')) {
