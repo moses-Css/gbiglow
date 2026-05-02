@@ -143,7 +143,7 @@ export default function SongsIndex({ songs, folders, filters }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Sheet Music Index</h1>
+                        <h1 className="text-2xl font-bold">Songs</h1>
                         <p className="text-muted-foreground text-sm">{songs.total} saved songs</p>
                     </div>
                     {isAdmin && (
