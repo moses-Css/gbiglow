@@ -1,75 +1,124 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    private function getForeignKeys(string $table): array
+    {
+        return array_column(DB::select("
+            SELECT CONSTRAINT_NAME
+            FROM information_schema.TABLE_CONSTRAINTS
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = ?
+            AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+        ", [$table]), 'CONSTRAINT_NAME');
+    }
+
+    private function getIndexes(string $table): array
+    {
+        return array_column(DB::select("
+            SELECT DISTINCT INDEX_NAME
+            FROM information_schema.STATISTICS
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = ?
+        ", [$table]), 'INDEX_NAME');
+    }
+
+    private function getColumns(string $table): array
+    {
+        return array_column(DB::select("
+            SELECT COLUMN_NAME
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = ?
+        ", [$table]), 'COLUMN_NAME');
+    }
+
     public function up(): void
     {
-        Schema::table('schedule_song', function (Blueprint $table) {
-            // Drop FK and constraints before dropping column
-            if (Schema::hasIndex('schedule_song', 'uq_schedule_song')) {
-                $table->dropUnique('uq_schedule_song');
-            }
-            if (Schema::hasIndex('schedule_song', 'idx_schedule_song_order')) {
-                $table->dropIndex('idx_schedule_song_order');
-            }
-            $foreignKeys = collect(DB::select("
-                SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS
-                WHERE TABLE_NAME = 'schedule_song'
-                AND CONSTRAINT_TYPE = 'FOREIGN KEY'
-                AND CONSTRAINT_NAME = 'schedule_song_schedule_id_foreign'
-            "));
-            if ($foreignKeys->isNotEmpty()) {
-                $table->dropForeign('schedule_song_schedule_id_foreign');
-            }
-            if (Schema::hasColumn('schedule_song', 'schedule_id')) {
-                $table->dropColumn('schedule_id');
-            }
-            if (!Schema::hasColumn('schedule_song', 'session_id')) {
-                $table->foreignId('session_id')
-                    ->after('id')
-                    ->constrained('schedule_sessions')
-                    ->cascadeOnDelete();
-            }
-            if (!Schema::hasIndex('schedule_song', 'uq_session_song')) {
-                $table->unique(['session_id', 'song_id'], 'uq_session_song');
-            }
-            if (!Schema::hasIndex('schedule_song', 'idx_session_song_order')) {
-                $table->index(['session_id', 'order'], 'idx_session_song_order');
-            }
-        });
+        $fks     = $this->getForeignKeys('schedule_song');
+        $indexes = $this->getIndexes('schedule_song');
+        $columns = $this->getColumns('schedule_song');
+
+        // Step 1 — Drop FKs first (always before indexes)
+        if (in_array('schedule_song_schedule_id_foreign', $fks)) {
+            DB::statement('ALTER TABLE `schedule_song` DROP FOREIGN KEY `schedule_song_schedule_id_foreign`');
+        }
+
+        // Step 2 — Drop indexes
+        if (in_array('uq_schedule_song', $indexes)) {
+            DB::statement('ALTER TABLE `schedule_song` DROP INDEX `uq_schedule_song`');
+        }
+        if (in_array('idx_schedule_song_order', $indexes)) {
+            DB::statement('ALTER TABLE `schedule_song` DROP INDEX `idx_schedule_song_order`');
+        }
+
+        // Step 3 — Drop column
+        if (in_array('schedule_id', $columns)) {
+            DB::statement('ALTER TABLE `schedule_song` DROP COLUMN `schedule_id`');
+        }
+
+        // Step 4 — Add session_id with FK
+        if (!in_array('session_id', $this->getColumns('schedule_song'))) {
+            DB::statement('ALTER TABLE `schedule_song` ADD COLUMN `session_id` BIGINT UNSIGNED NOT NULL AFTER `id`');
+            DB::statement('ALTER TABLE `schedule_song` ADD CONSTRAINT `schedule_song_session_id_foreign` FOREIGN KEY (`session_id`) REFERENCES `schedule_sessions` (`id`) ON DELETE CASCADE');
+        }
+
+        // Step 5 — Add indexes
+        $indexes = $this->getIndexes('schedule_song');
+        if (!in_array('uq_session_song', $indexes)) {
+            DB::statement('ALTER TABLE `schedule_song` ADD UNIQUE KEY `uq_session_song` (`session_id`, `song_id`)');
+        }
+        if (!in_array('idx_session_song_order', $indexes)) {
+            DB::statement('ALTER TABLE `schedule_song` ADD INDEX `idx_session_song_order` (`session_id`, `order`)');
+        }
     }
 
     public function down(): void
     {
-        // Truncate required — existing rows reference session_id,
-        // cannot restore schedule_id FK constraint with live data
-        DB::table('schedule_song')->truncate();
+        $fks     = $this->getForeignKeys('schedule_song');
+        $indexes = $this->getIndexes('schedule_song');
+        $columns = $this->getColumns('schedule_song');
 
-        Schema::table('schedule_song', function (Blueprint $table) {
-            if (Schema::hasIndex('schedule_song', 'idx_session_song_order')) {
-                $table->dropIndex('idx_session_song_order');
-            }
-            if (Schema::hasIndex('schedule_song', 'uq_session_song')) {
-                $table->dropUnique('uq_session_song');
-            }
-            if (Schema::hasColumn('schedule_song', 'session_id')) {
-                $table->dropColumn('session_id');
-            }
-            if (!Schema::hasColumn('schedule_song', 'schedule_id')) {
-                $table->unsignedBigInteger('schedule_id')->after('id');
-                $table->foreign('schedule_id', 'schedule_song_schedule_id_foreign')
-                    ->references('id')
-                    ->on('schedules')
-                    ->cascadeOnDelete();
-            }
-            if (!Schema::hasIndex('schedule_song', 'idx_schedule_song_order')) {
-                $table->index(['schedule_id', 'order'], 'idx_schedule_song_order');
-            }
-        });
+        // Truncate — cannot restore schedule_id FK with live session-based data
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        DB::table('schedule_song')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
+        // Step 1 — Drop FKs first
+        if (in_array('schedule_song_session_id_foreign', $fks)) {
+            DB::statement('ALTER TABLE `schedule_song` DROP FOREIGN KEY `schedule_song_session_id_foreign`');
+        }
+
+        // Step 2 — Drop indexes
+        if (in_array('uq_session_song', $indexes)) {
+            DB::statement('ALTER TABLE `schedule_song` DROP INDEX `uq_session_song`');
+        }
+        if (in_array('idx_session_song_order', $indexes)) {
+            DB::statement('ALTER TABLE `schedule_song` DROP INDEX `idx_session_song_order`');
+        }
+
+        // Step 3 — Drop column
+        if (in_array('session_id', $columns)) {
+            DB::statement('ALTER TABLE `schedule_song` DROP COLUMN `session_id`');
+        }
+
+        // Step 4 — Restore schedule_id
+        if (!in_array('schedule_id', $this->getColumns('schedule_song'))) {
+            DB::statement('ALTER TABLE `schedule_song` ADD COLUMN `schedule_id` BIGINT UNSIGNED NOT NULL AFTER `id`');
+            DB::statement('ALTER TABLE `schedule_song` ADD CONSTRAINT `schedule_song_schedule_id_foreign` FOREIGN KEY (`schedule_id`) REFERENCES `schedules` (`id`) ON DELETE CASCADE');
+        }
+
+        // Step 5 — Restore indexes
+        $indexes = $this->getIndexes('schedule_song');
+        if (!in_array('uq_schedule_song', $indexes)) {
+            DB::statement('ALTER TABLE `schedule_song` ADD UNIQUE KEY `uq_schedule_song` (`schedule_id`, `song_id`)');
+        }
+        if (!in_array('idx_schedule_song_order', $indexes)) {
+            DB::statement('ALTER TABLE `schedule_song` ADD INDEX `idx_schedule_song_order` (`schedule_id`, `order`)');
+        }
     }
 };
