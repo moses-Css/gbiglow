@@ -24,8 +24,8 @@ export default function Login({
 }: Props) {
     return (
         <AuthLayout
-            title="Log in to your account"
-            description="Enter your email and password below to log in"
+            title="Welcome back"
+            description="Enter your credential to continue"
         >
             <Head title="Log in" />
 
@@ -94,7 +94,7 @@ export default function Login({
                                 data-test="login-button"
                             >
                                 {processing && <Spinner />}
-                                Log in
+                                Continue
                             </Button>
                         </div>
 

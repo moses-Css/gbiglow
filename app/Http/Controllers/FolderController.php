@@ -6,6 +6,7 @@ use App\Http\Requests\Folder\StoreFolderRequest;
 use App\Http\Requests\Folder\UpdateFolderRequest;
 use App\Models\Folder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,21 +24,24 @@ class FolderController extends Controller
     public function store(StoreFolderRequest $request): RedirectResponse
     {
         Folder::create($request->validated());
-        return back()->with('success', 'Folder berhasil dibuat.');
+        Cache::forget('active_folders');
+        return back()->with('success', 'Folder created successfully.');
     }
 
     public function update(UpdateFolderRequest $request, Folder $folder): RedirectResponse
     {
         $folder->update($request->validated());
-        return back()->with('success', 'Folder berhasil diupdate.');
+        Cache::forget('active_folders');
+        return back()->with('success', 'Folder updated successfully.');
     }
 
     public function destroy(Folder $folder): RedirectResponse
     {
         if ($folder->songs()->exists()) {
-            return back()->withErrors(['delete' => 'Folder masih memiliki lagu, tidak bisa dihapus.']);
+            return back()->withErrors(['delete' => 'There are songs in this folder. Cannot delete.']);
         }
         $folder->delete();
-        return back()->with('success', 'Folder berhasil dihapus.');
+        Cache::forget('active_folders');
+        return back()->with('success', 'Folder deleted successfully.');
     }
 }

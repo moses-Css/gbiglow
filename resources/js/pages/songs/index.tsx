@@ -578,30 +578,44 @@ export default function SongsIndex({ songs, folders, filters }: Props) {
 
                         <div className="grid grid-cols-2 gap-3">
                             <Field label="Folder" required error={errors.folder_id} showError={submitted}>
-                                <Select
-                                    value={data.folder_id}
-                                    onValueChange={(v) => {
-                                        setData('folder_id', v);
-                                        checkPageConflict(data.page_number, v, editSong?.id);
-                                    }}
-                                >
-                                    <SelectTrigger className={`cursor-pointer w-full ${submitted && errors.folder_id ? 'border-destructive' : ''}`}>
-                                        <SelectValue placeholder="Pick folder" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {folders.map((f) => (
-                                            <SelectItem key={f.id} value={String(f.id)}>
-                                                <span className="flex items-center gap-1.5">
-                                                    {f.color_code && (
-                                                        <span className="h-2 w-2 rounded-full flex-shrink-0"
-                                                            style={{ backgroundColor: f.color_code }} />
-                                                    )}
-                                                    {f.name}
-                                                </span>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                {folders.length === 0 ? (
+                                    <div className="rounded-lg border border-dashed px-3 py-2.5 flex flex-col gap-1">
+                                        <p className="text-xs text-muted-foreground leading-snug">
+                                            No folders yet
+                                        </p>
+                                        <a
+                                            href="/folders"
+                                            className="text-xs font-medium text-primary hover:underline w-fit"
+                                        >
+                                            Create a folder →
+                                        </a>
+                                    </div>
+                                ) : (
+                                    <Select
+                                        value={data.folder_id}
+                                        onValueChange={(v) => {
+                                            setData('folder_id', v);
+                                            checkPageConflict(data.page_number, v, editSong?.id);
+                                        }}
+                                    >
+                                        <SelectTrigger className={`cursor-pointer w-full ${submitted && errors.folder_id ? 'border-destructive' : ''}`}>
+                                            <SelectValue placeholder="Pick a folder" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {folders.map((f) => (
+                                                <SelectItem key={f.id} value={String(f.id)}>
+                                                    <span className="flex items-center gap-1.5">
+                                                        {f.color_code && (
+                                                            <span className="h-2 w-2 rounded-full flex-shrink-0"
+                                                                style={{ backgroundColor: f.color_code }} />
+                                                        )}
+                                                        {f.name}
+                                                    </span>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
                             </Field>
 
                             <Field
