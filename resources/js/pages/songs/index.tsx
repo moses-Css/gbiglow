@@ -587,7 +587,7 @@ export default function SongsIndex({ songs, folders, filters }: Props) {
                                             href="/folders"
                                             className="text-xs font-medium text-primary hover:underline w-fit"
                                         >
-                                            Create a folder →
+                                            Create a folder
                                         </a>
                                     </div>
                                 ) : (

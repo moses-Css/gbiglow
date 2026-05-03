@@ -91,7 +91,7 @@ export default function SessionSongList({
     if (songs.length === 0) {
         return (
             <p className="text-center text-sm text-muted-foreground py-6">
-                Belum ada lagu. Cari lagu di bawah.
+                No songs yet, find one below
             </p>
         );
     }

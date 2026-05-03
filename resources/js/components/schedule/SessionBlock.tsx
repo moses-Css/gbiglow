@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Search, Trash2, X } from 'lucide-react';
 import SessionSongList from '@/components/schedule/SessionSongList';
@@ -104,7 +105,7 @@ export default function SessionBlock({
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500 flex-shrink-0" />
                     )}
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                        {session.songs.length} lagu
+                        {session.songs.length} song{session.songs.length === 1 ? '' : 's'}
                     </Badge>
                 </div>
 
@@ -139,35 +140,39 @@ export default function SessionBlock({
                             onCheckedChange={handleSameAsToggle}
                         />
                         <Label htmlFor={`same-as-${session._key}`} className="text-sm cursor-pointer">
-                            Same as session lain
+                            Same as another session
                         </Label>
                     </div>
 
                     {isLocked && (
                         <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">Sama dengan:</span>
-                            <select
+
+                            <Select
                                 value={session.same_as_key ?? ''}
-                                onChange={(e) => handleSameAsChange(e.target.value)}
-                                className="text-xs rounded-md border bg-background px-2 py-1 cursor-pointer flex-1"
+                                onValueChange={(e) => handleSameAsChange(e.target.value)}
                             >
-                                {sameAsOptions.map((s) => (
-                                    <option key={s._key} value={s._key}>
-                                        {s.label}
-                                    </option>
-                                ))}
-                            </select>
+                                <SelectTrigger className='w-full'>
+                                    <SelectValue placeholder="Choose a session"/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {sameAsOptions.map((s) => (
+                                        <SelectItem key={s._key} value={s._key}>
+                                            {s.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                             {sameAsTarget && (
-                                <span className="text-xs text-muted-foreground">
-                                    ({sameAsTarget.songs.length} lagu)
+                                <span className="text-xs text-muted-foreground text-nowrap">
+                                    ({sameAsTarget.songs.length} song{sameAsTarget.songs.length === 1 ? '' : 's'})
                                 </span>
                             )}
                         </div>
                     )}
 
                     {isLocked && (
-                        <p className="text-[11px] text-muted-foreground">
-                            Lagu akan di-copy dari session referensi saat disimpan.
+                        <p className="text-[12px] text-muted-foreground">
+                            Songs will be copied from the reference session
                         </p>
                     )}
                 </div>
@@ -189,7 +194,7 @@ export default function SessionBlock({
                         onChange={(e) => setSearch(e.target.value)}
                         onFocus={() => setSearchFocused(true)}
                         onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-                        placeholder="Cari lagu untuk ditambahkan..."
+                        placeholder="Find a song to add"
                         className="pl-9 pr-8"
                     />
                     {search && (
@@ -207,7 +212,7 @@ export default function SessionBlock({
                         <div className="absolute top-full mt-1 z-50 w-full rounded-md border bg-popover shadow-md overflow-hidden max-h-60 overflow-y-auto">
                             {filteredSongs.length === 0 ? (
                                 <p className="px-3 py-4 text-sm text-center text-muted-foreground">
-                                    Lagu tidak ditemukan untuk "{search}"
+                                    No songs found for "{search}"
                                 </p>
                             ) : (
                                 filteredSongs.map((song) => {

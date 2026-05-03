@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import { router } from '@inertiajs/react';
 import { getCsrf } from '@/lib/utils';
 import { bulkStore as bulkStoreRoute, bulkCheckDuplicates as bulkCheckDuplicatesRoute, checkPageConflict as checkPageConflictRoute } from '@/routes/songs';
-
+import type {Folder} from '@/types';
 type DuplicateAction = 'make_version' | 'overwrite' | 'skip' | null;
 
 export interface BulkRow {
@@ -21,6 +21,7 @@ export interface BulkRow {
 }
 
 interface UseBulkAddSongsOptions {
+    folders:   Folder[];
     flash:     (message: string) => void;
     onSuccess: () => void;
 }
@@ -33,15 +34,18 @@ function parseStatus(val: unknown): 'printed' | 'not_printed' {
     return 'not_printed';
 }
 
-function validateRow(row: BulkRow, allRows: BulkRow[] = []): string[] {
+function validateRow(row: BulkRow, allRows: BulkRow[] = [], folders: Folder[] = []): string[] {
     const errs: string[] = [];
 
     if (!row.title.trim())
         errs.push('Title is required');
     if (!row.page_number || isNaN(Number(row.page_number)) || Number(row.page_number) < 1)
         errs.push('Page number must be ≥ 1');
-    if (!row.folder_id)
+    if (!row.folder_id) {
         errs.push('Folder is required');
+    } else if (folders.length > 0 && !folders.some((f) => String(f.id) === row.folder_id)) {
+        errs.push(`Folder ID ${row.folder_id} not found`);
+    }
 
     if (row.folder_id && row.page_number && allRows.length > 0) {
         const conflictIdx = allRows.findIndex((r) =>
@@ -59,7 +63,7 @@ function validateRow(row: BulkRow, allRows: BulkRow[] = []): string[] {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export function useBulkAddSongs({ flash, onSuccess }: UseBulkAddSongsOptions) {
+export function useBulkAddSongs({ folders, flash, onSuccess }: UseBulkAddSongsOptions) {
     const [step, setStep]         = useState<'upload' | 'scanning' | 'review' | 'submitting'>('upload');
     const [rows, setRows]         = useState<BulkRow[]>([]);
     const [dragging, setDragging] = useState(false);
@@ -128,7 +132,7 @@ export function useBulkAddSongs({ flash, onSuccess }: UseBulkAddSongsOptions) {
                 _pageConflict: null,
             }));
 
-            parsed.forEach((row) => { row._errors = validateRow(row, parsed); });
+            parsed.forEach((row) => { row._errors = validateRow(row, parsed, folders); });
 
             try {
                 const titles = parsed.map((r) => ({ title: r.title, publisher: r.publisher }));
@@ -172,7 +176,7 @@ export function useBulkAddSongs({ flash, onSuccess }: UseBulkAddSongsOptions) {
                 }
                 return updated;
             });
-            return next.map((r) => ({ ...r, _errors: validateRow(r, next) }));
+            return next.map((r) => ({ ...r, _errors: validateRow(r, next, folders) }));
         });
     }, [checkPageConflict]);
 
@@ -183,7 +187,7 @@ export function useBulkAddSongs({ flash, onSuccess }: UseBulkAddSongsOptions) {
     const deleteRow = useCallback((id: string) => {
         setRows((prev) => {
             const next = prev.filter((r) => r._id !== id);
-            return next.map((r) => ({ ...r, _errors: validateRow(r, next) }));
+            return next.map((r) => ({ ...r, _errors: validateRow(r, next, folders) }));
         });
     }, []);
 

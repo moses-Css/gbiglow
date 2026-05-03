@@ -32,7 +32,7 @@ export default function BulkAddDrawer({ open, onClose, folders, onSuccess }: Pro
         parseFile, updateRow, setDupAction, deleteRow,
         handleSubmit, doSubmit, handleReset, handleClose,
         scrollToDuplicate,
-    } = useBulkAddSongs({ flash, onSuccess });
+    } = useBulkAddSongs({ folders, flash, onSuccess });
 
     return (
         <>
@@ -89,7 +89,7 @@ export default function BulkAddDrawer({ open, onClose, folders, onSuccess }: Pro
                             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                                 Expected spreadsheet columns
                             </p>
-                            <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                                 {[
                                     { col: 'title',       req: true,  note: 'Song title' },
                                     { col: 'page_number', req: true,  note: 'Numeric, min 1' },
@@ -173,9 +173,9 @@ export default function BulkAddDrawer({ open, onClose, folders, onSuccess }: Pro
                                 <thead className="sticky top-0 z-10 bg-muted">
                                     <tr className="text-left text-xs text-muted-foreground uppercase tracking-wider border-b">
                                         <th className="px-3 py-2.5 w-8">#</th>
-                                        <th className="px-3 py-2.5 min-w-40">Title *</th>
+                                        <th className="px-3 py-2.5 min-w-52">Title *</th>
                                         <th className="px-3 py-2.5 min-w-32">Publisher</th>
-                                        <th className="px-3 py-2.5 w-24">Page *</th>
+                                        <th className="px-3 py-2.5 min-w-24">Page *</th>
                                         <th className="px-3 py-2.5 min-w-36">Folder *</th>
                                         <th className="px-3 py-2.5 w-32">Status</th>
                                         <th className="px-3 py-2.5 w-40">Action</th>
@@ -243,26 +243,49 @@ export default function BulkAddDrawer({ open, onClose, folders, onSuccess }: Pro
                                                         )}
                                                     </div>
                                                 </td>
+                                                {/* Folder */}
                                                 <td className="px-3 py-2 align-middle">
-                                                    <Select value={row.folder_id}
-                                                        onValueChange={(v) => updateRow(row._id, 'folder_id', v)}>
-                                                        <SelectTrigger className={`h-8 text-sm ${!row.folder_id ? 'border-destructive' : ''}`}>
-                                                            <SelectValue placeholder="Pick folder" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {folders.map((f) => (
-                                                                <SelectItem key={f.id} value={String(f.id)}>
-                                                                    <span className="flex items-center gap-1.5">
-                                                                        {f.color_code && (
-                                                                            <span className="h-2 w-2 rounded-full flex-shrink-0"
-                                                                                style={{ backgroundColor: f.color_code }} />
-                                                                        )}
-                                                                        {f.name}
-                                                                    </span>
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
+                                                    {(() => {
+                                                        const folderExists = !row.folder_id || folders.some((f) => String(f.id) === row.folder_id);
+                                                        return (
+                                                            <div className="flex flex-col gap-1">
+                                                                <Select value={row.folder_id}
+                                                                    onValueChange={(v) => updateRow(row._id, 'folder_id', v)}>
+                                                                    <SelectTrigger className={`h-8 text-sm w-full ${!row.folder_id || !folderExists ? 'border-destructive' : ''}`}>
+                                                                        <SelectValue placeholder="Choose a folder" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        {folders.map((f) => (
+                                                                            <SelectItem key={f.id} value={String(f.id)}>
+                                                                                <span className="flex items-center gap-1.5">
+                                                                                    {f.color_code && (
+                                                                                        <span className="h-2 w-2 rounded-full flex-shrink-0"
+                                                                                            style={{ backgroundColor: f.color_code }} />
+                                                                                    )}
+                                                                                    {f.name}
+                                                                                </span>
+                                                                            </SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                                {row.folder_id && !folderExists && (
+                                                                    <div className="flex items-center gap-1 flex-wrap">
+                                                                        <span className="text-[12px] text-destructive leading-tight">
+                                                                            Folder ID {row.folder_id} not found.
+                                                                        </span>
+                                                                        <a
+                                                                            href="/folders"
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="text-[12px] text-primary underline font-medium leading-tight"
+                                                                        >
+                                                                            View folders
+                                                                        </a>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </td>
                                                 <td className="px-3 py-2 align-middle">
                                                     <Select value={row.status}

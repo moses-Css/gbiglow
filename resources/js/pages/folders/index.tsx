@@ -58,46 +58,62 @@ export default function FoldersIndex({ folders }: Props) {
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {folders.map((folder) => (
                         <div key={folder.id}
-                            className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3">
-                            <span className="h-4 w-4 rounded-full flex-shrink-0 ring-1 ring-black/10"
-                                style={{ backgroundColor: folder.color_code ?? '#6B7280' }} />
-                            <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{folder.name}</p>
-                                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <Music className="h-3 w-3" />
-                                    {folder.songs_count ?? 0} lagu ·{' '}
+                            className="flex flex-col gap-3 rounded-xl border bg-card px-4 py-3.5 hover:bg-muted/30 transition-colors">
+
+                            {/* Top row — color + name + menu */}
+                            <div className="flex items-center gap-3">
+                                <span
+                                    className="h-4 w-4 rounded-full flex-shrink-0 ring-1 ring-black/10"
+                                    style={{ backgroundColor: folder.color_code ?? '#6B7280' }}
+                                />
+                                <p className="font-semibold text-sm flex-1 truncate">{folder.name}</p>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0 cursor-pointer">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem className="cursor-pointer" onClick={() => openEdit(folder)}>
+                                            Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            className="text-destructive cursor-pointer"
+                                            onClick={() => handleDelete(folder)}>
+                                            Delete
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+
+                            {/* Bottom row — meta info */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                        <Music className="h-3 w-3" />
+                                        {folder.songs_count ?? 0} {(folder.songs_count ?? 0) === 1 ? 'song' : 'songs'}
+                                    </span>
                                     <Badge
                                         variant={folder.is_active ? 'default' : 'secondary'}
                                         className="text-[10px] px-1.5 py-0 h-4">
-                                        {folder.is_active ? 'Aktif' : 'Nonaktif'}
+                                        {folder.is_active ? 'Active' : 'Inactive'}
                                     </Badge>
-                                </p>
+                                </div>
+                                <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                    ID: {folder.id}
+                                </span>
                             </div>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 cursor-pointer">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem className="cursor-pointer" onClick={() => openEdit(folder)}>
-                                        Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        className="text-destructive cursor-pointer"
-                                        onClick={() => handleDelete(folder)}>
-                                        Hapus
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
                         </div>
                     ))}
 
                     {folders.length === 0 && (
-                        <p className="col-span-full text-center text-muted-foreground py-16">
-                            Belum ada folder. Buat folder pertama!
-                        </p>
+                        <div className="col-span-full flex flex-col items-center justify-center py-16 gap-3">
+                            <p className="text-sm text-muted-foreground">No folders yet.</p>
+                            <Button onClick={openCreate} size="sm" className="cursor-pointer">
+                                <Plus className="mr-2 h-4 w-4" /> Create your first folder
+                            </Button>
+                        </div>
                     )}
                 </div>
             </div>

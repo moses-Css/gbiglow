@@ -170,7 +170,7 @@ export default function ScheduleShow({ schedule, allSongs }: Props) {
     return (
         <AppLayout>
             <Head title={schedule.event_name} />
-            <div className="mx-auto max-w-2xl flex flex-col gap-6 p-4 md:p-6 pb-28">
+            <div className="max-w-2xl flex flex-col gap-6 p-4 md:p-6 pb-28">
 
                 {/* Header */}
                 <ScheduleHeader
