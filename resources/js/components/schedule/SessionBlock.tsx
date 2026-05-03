@@ -149,7 +149,7 @@ export default function SessionBlock({
 
                             <Select
                                 value={session.same_as_key ?? ''}
-                                onValueChange={(e) => handleSameAsChange(e.target.value)}
+                                onValueChange={handleSameAsChange}
                             >
                                 <SelectTrigger className='w-full'>
                                     <SelectValue placeholder="Choose a session"/>
