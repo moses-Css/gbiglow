@@ -37,7 +37,7 @@ export default function ScheduleSkeleton() {
                         <div key={j} className="flex items-center gap-3 rounded-xl border px-3 py-3">
                             <Bone className="h-11 w-7 rounded-lg" />
                             <Bone className="h-4 w-4 rounded-full" />
-                            <div className="flex-1 flex flex-col gap-1.5">
+                            <div className="flex-1 flex flex-col gap-2">
                                 <Bone className="h-4 w-40" />
                                 <Bone className="h-3 w-24" />
                             </div>

@@ -109,9 +109,9 @@ export function useScheduleForm(schedules: Schedule[]) {
         });
     }, [deleteTarget, flash]);
 
-    const availableSchedules = schedules.filter(
-        (s) => s.id !== Number(data.copied_from_id)
-    );
+    const availableSchedules = editSchedule
+    ? schedules.filter((s) => s.id !== editSchedule.id)
+    : schedules;
 
     return {
         data,

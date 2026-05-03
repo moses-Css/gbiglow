@@ -141,9 +141,11 @@ export default function BulkAddDrawer({ open, onClose, folders, onSuccess }: Pro
                     <>
                         <div className="flex items-center gap-2 px-6 py-3 border-b bg-muted/10 flex-shrink-0 flex-wrap">
                             <span className="text-sm text-muted-foreground">{rows.length} rows</span>
-                            <Badge variant="default" className="gap-1 cursor-default">
-                                <CheckCircle2 className="h-3 w-3" /> {validCount} clean
-                            </Badge>
+                            {validCount > 0 && (
+                                <Badge variant="default" className="gap-1 cursor-default">
+                                    <CheckCircle2 className="h-3 w-3" /> {validCount} clean
+                                </Badge>
+                            )}
                             {dupCount > 0 && (
                                 <button onClick={scrollToDuplicate} className="cursor-pointer">
                                     <Badge className="gap-1 bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30 transition-colors border">

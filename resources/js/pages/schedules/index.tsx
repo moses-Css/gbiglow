@@ -7,7 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectSeparator,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';    
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -20,7 +29,7 @@ import {
 import Field from '@/components/ui/field';
 import SectionLabel from '@/components/ui/section-label';
 import SideDrawer from '@/components/side-drawer';
-import { CalendarIcon, Copy, MoreVertical, Plus, Trash2 } from 'lucide-react';
+import { CalendarIcon, Copy, MoreVertical, Plus} from 'lucide-react';
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem,
     DropdownMenuSeparator, DropdownMenuTrigger,
@@ -236,104 +245,45 @@ function CopyFromCombobox({ value, onChange, schedules }: {
     onChange:  (v: string) => void;
     schedules: Schedule[];
 }) {
-    const [open, setOpen]         = useState(false);
-    const isMouseDownRef          = useRef(false);
-
-    const selected = schedules.find((s) => String(s.id) === value);
-
-    // Group by category
     const grouped = schedules.reduce<Record<string, Schedule[]>>((acc, s) => {
         const key = s.category || 'Uncategorized';
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(s);
+        (acc[key] ??= []).push(s);
         return acc;
     }, {});
 
+    const categories = Object.entries(grouped);
+
     return (
-        <div className="relative w-full">
-            <button
-                type="button"
-                onClick={() => setOpen((prev) => !prev)}
-                onBlur={() => { if (!isMouseDownRef.current) setOpen(false); }}
-                className={cn(
-                    'flex h-9 w-full items-center justify-between rounded-md border',
-                    'bg-transparent px-3 py-2 text-sm shadow-sm transition-colors',
-                    'hover:bg-accent focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer',
-                    !selected && 'text-muted-foreground',
-                )}
-            >
-                <span className="truncate">
-                    {selected ? selected.event_name : 'Start fresh'}
-                </span>
-                <span className="text-muted-foreground text-xs ml-2 flex-shrink-0">▾</span>
-            </button>
+        <Select value={value || '__fresh__'} onValueChange={(v) => onChange(v === '__fresh__' ? '' : v)}>
+            <SelectTrigger className="w-full">
+                <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="__fresh__">Start fresh</SelectItem>
 
-            {open && (
-                <div
-                    className="absolute top-full mt-1 z-50 w-full rounded-md border bg-popover shadow-md overflow-hidden max-h-64 overflow-y-auto"
-                    onMouseDown={() => { isMouseDownRef.current = true; }}
-                    onMouseUp={() => { isMouseDownRef.current = false; }}
-                >
-                    {/* Start fresh option */}
-                    <button
-                        type="button"
-                        onMouseDown={(e) => {
-                            e.preventDefault();
-                            onChange('');
-                            setOpen(false);
-                        }}
-                        className={cn(
-                            'w-full text-left px-3 py-2 text-sm hover:bg-accent cursor-pointer',
-                            !value && 'bg-accent font-medium',
-                        )}
-                    >
-                        Start fresh
-                    </button>
-
-                    {schedules.length === 0 && (
-                        <p className="px-3 py-2 text-sm text-muted-foreground">
-                            No existing schedules.
-                        </p>
-                    )}
-
-                    {/* Grouped options */}
-                    {Object.entries(grouped).map(([category, items]) => (
-                        <div key={category}>
-                            <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/50">
-                                {category}
-                            </p>
-                            {items.map((s) => (
-                                <button
-                                    key={s.id}
-                                    type="button"
-                                    onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        onChange(String(s.id));
-                                        setOpen(false);
-                                    }}
-                                    className={cn(
-                                        'w-full text-left px-3 py-2 hover:bg-accent cursor-pointer',
-                                        'flex items-center justify-between gap-3',
-                                        String(s.id) === value && 'bg-accent/60',
-                                    )}
-                                >
-                                    <span className="text-sm font-medium truncate">
-                                        {s.event_name}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground flex-shrink-0">
-                                        {new Date(s.event_date).toLocaleDateString('en-US', {
+                {categories.map(([category, items], index) => (
+                    <SelectGroup key={category}>
+                        {index === 0 && <SelectSeparator />}
+                        <SelectLabel>{category}</SelectLabel>
+                        {items.map((s) => (
+                            <SelectItem key={s.id} value={String(s.id)}>
+                                {s.event_name}
+                                {s.event_date && (
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                        — {new Date(s.event_date).toLocaleDateString('en-US', {
                                             month: 'short',
                                             day:   'numeric',
                                             year:  'numeric',
                                         })}
                                     </span>
-                                </button>
-                            ))}
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
+                                )}
+                            </SelectItem>
+                        ))}
+                        {index < categories.length - 1 && <SelectSeparator />}
+                    </SelectGroup>
+                ))}
+            </SelectContent>
+        </Select>
     );
 }
 

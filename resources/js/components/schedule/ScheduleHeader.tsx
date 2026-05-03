@@ -54,7 +54,7 @@ export default function ScheduleHeader({
             </Button>
 
             {/* Zone 1 — Schedule info */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
                 <div className="flex items-start gap-2 flex-wrap">
                     <h1 className="text-2xl font-bold leading-tight">
                         {schedule.event_name}
@@ -95,7 +95,7 @@ export default function ScheduleHeader({
             </div>
 
             {/* Zone 2 — Action bar (desktop only — mobile uses sticky bottom bar) */}
-            <div className="hidden md:flex items-center gap-2 pt-1 border-t">
+            <div className="hidden md:flex items-center gap-2 pt-3 border-t">
                 <Button
                     variant="outline"
                     size="sm"

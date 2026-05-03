@@ -63,7 +63,7 @@ export default function SideDrawer({
                         aria-label={title}
                     >
                         <div className="flex items-start justify-between gap-3 px-6 py-4 border-b flex-shrink-0">
-                            <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                            <div className="flex-1 min-w-0 flex flex-col gap-2">
                                 <div className="flex items-center gap-2 flex-wrap w-full justify-between">
                                     <h2 className="text-base font-semibold truncate leading-tight">{title}</h2>
                                     {headerExtra && (

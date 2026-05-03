@@ -84,7 +84,7 @@ function LibraryCard({
                     </p>
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                         {song.folder && (
-                            <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium">
+                            <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] font-medium">
                                 {song.folder.color_code && (
                                     <span
                                         className="h-1.5 w-1.5 rounded-full flex-shrink-0"
@@ -93,13 +93,6 @@ function LibraryCard({
                                 )}
                                 {song.folder.name}
                             </span>
-                        )}
-                        {!mobileSelectMode && (
-                            <StatusBadge
-                                status={song.status}
-                                interactive={isAdmin}
-                                onClick={isAdmin ? () => onToggleStatus?.() : undefined}
-                            />
                         )}
                     </div>
                 </div>
