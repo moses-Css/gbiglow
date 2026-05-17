@@ -13,6 +13,7 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { restrictToParentElement } from '@dnd-kit/modifiers';
 import SongCard from '@/components/songs/SongCard';
 import type { SessionSong } from '@/types';
 
@@ -73,7 +74,7 @@ export default function SessionSongList({
             activationConstraint: { distance: 8 },
         }),
         useSensor(TouchSensor, {
-            activationConstraint: { delay: 200, tolerance: 8 },
+            activationConstraint: { delay: 300, tolerance: 5 },
         }),
     );
 
@@ -101,6 +102,7 @@ export default function SessionSongList({
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
+            modifiers={[restrictToParentElement]}
         >
             <SortableContext
                 items={songs.map((s) => s.id)}

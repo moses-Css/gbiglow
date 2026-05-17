@@ -61,7 +61,9 @@ export function FlashProvider({ children }: { children: React.ReactNode }) {
             {children}
 
             {/* Toast stack — bottom-left */}
-            <div className="fixed bottom-6 left-6 z-[9999] flex flex-col gap-2 pointer-events-none">
+            <div className="fixed z-[9999] flex flex-col gap-2 pointer-events-none items-center
+                            top-6 left-1/2 -translate-x-1/2
+                            md:top-auto md:bottom-6 md:left-6 md:translate-x-0 md:items-start w-full">
                 {toasts.map((toast) => (
                     <div key={toast.id}
                         style={{
@@ -82,12 +84,22 @@ export function FlashProvider({ children }: { children: React.ReactNode }) {
 
             <style>{`
                 @keyframes toast-in {
-                    from { opacity: 0; transform: translateX(-16px); }
-                    to   { opacity: 1; transform: translateX(0); }
+                    from { opacity: 0; transform: translateY(-16px); }
+                    to   { opacity: 1; transform: translateY(0); }
                 }
                 @keyframes toast-out {
-                    from { opacity: 1; transform: translateX(0); }
-                    to   { opacity: 0; transform: translateX(-16px); }
+                    from { opacity: 1; transform: translateY(0); }
+                    to   { opacity: 0; transform: translateY(-16px); }
+                }
+                @media (min-width: 768px) {
+                    @keyframes toast-in {
+                        from { opacity: 0; transform: translateX(-16px); }
+                        to   { opacity: 1; transform: translateX(0); }
+                    }
+                    @keyframes toast-out {
+                        from { opacity: 1; transform: translateX(0); }
+                        to   { opacity: 0; transform: translateX(-16px); }
+                    }
                 }
             `}</style>
         </FlashContext.Provider>

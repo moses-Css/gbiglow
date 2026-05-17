@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import { Search, Trash2, X } from 'lucide-react';
 import SessionSongList from '@/components/schedule/SessionSongList';
 import type { Song, SessionSong } from '@/types';
@@ -46,7 +47,7 @@ export default function SessionBlock({
     onClearSameAs,
     isSongAdded,
 }: SessionBlockProps) {
-    const [search, setSearch]       = useState('');
+    const [search, setSearch] = useState('');
     const [searchFocused, setSearchFocused] = useState(false);
 
     // ── Search ────────────────────────────────────────────────────────────────
@@ -75,7 +76,6 @@ export default function SessionBlock({
             onClearSameAs(session._key);
             return;
         }
-        // Default ke session pertama yang bukan ini
         const first = sameAsOptions[0];
         if (first) onApplySameAs(session._key, first._key);
     };
@@ -85,6 +85,7 @@ export default function SessionBlock({
     };
 
     const isLocked = !!session.same_as_key;
+    const showSearchResults = searchFocused && search.trim().length > 0;
 
     // ── Render ────────────────────────────────────────────────────────────────
 
@@ -146,7 +147,6 @@ export default function SessionBlock({
 
                     {isLocked && (
                         <div className="flex items-center gap-2">
-
                             <Select
                                 value={session.same_as_key ?? ''}
                                 onValueChange={handleSameAsChange}
@@ -187,29 +187,48 @@ export default function SessionBlock({
 
             {/* Search bar — disabled kalau locked */}
             {!isLocked && (
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                    <Input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        onFocus={() => setSearchFocused(true)}
-                        onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-                        placeholder="Find a song to add"
-                        className="pl-9 pr-8"
-                    />
-                    {search && (
-                        <button
-                            type="button"
-                            onClick={() => setSearch('')}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                        >
-                            <X className="h-3 w-3" />
-                        </button>
-                    )}
+                <Popover open={showSearchResults}>
+                    <PopoverAnchor asChild>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                            <Input
+                                value={search}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    setSearchFocused(true);
+                                }}
+                                onFocus={() => setSearchFocused(true)}
+                                onBlur={() => setSearchFocused(false)}
+                                placeholder="Find a song to add"
+                                className="pl-9 pr-8"
+                            />
+                            {search && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearch('');
+                                        setSearchFocused(false);
+                                    }}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                >
+                                    <X className="h-3 w-3" />
+                                </button>
+                            )}
+                        </div>
+                    </PopoverAnchor>
 
-                    {/* Search results dropdown */}
-                    {searchFocused && search.trim().length > 0 && (
-                        <div className="absolute top-full mt-1 z-50 w-full rounded-md border bg-popover shadow-md overflow-hidden max-h-60 overflow-y-auto">
+                    <PopoverContent
+                        side="bottom"
+                        align="start"
+                        sideOffset={8}
+                        collisionPadding={16}
+                        onOpenAutoFocus={(e) => e.preventDefault()}
+                        onCloseAutoFocus={(e) => e.preventDefault()}
+                        onPointerDownOutside={() => setSearchFocused(false)}
+                        onEscapeKeyDown={() => setSearchFocused(false)}
+                        className="z-50 w-[var(--radix-popover-trigger-width)] p-0 overflow-hidden rounded-md border bg-popover shadow-md"
+                    >
+                        <div className="max-h-[min(15rem,calc(100dvh-10rem))] overflow-y-auto">
                             {filteredSongs.length === 0 ? (
                                 <p className="px-3 py-4 text-sm text-center text-muted-foreground">
                                     No songs found for "{search}"
@@ -268,8 +287,8 @@ export default function SessionBlock({
                                 })
                             )}
                         </div>
-                    )}
-                </div>
+                    </PopoverContent>
+                </Popover>
             )}
         </div>
     );

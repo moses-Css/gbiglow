@@ -27,7 +27,7 @@ import {
 import {
     ChevronLeft, ChevronRight,
     ExternalLink, FileSpreadsheet, FileText,
-    MoreVertical, Plus, Search, SlidersHorizontal, X,
+    MoreVertical, Plus, Search, SlidersHorizontal, X, Music,
 } from 'lucide-react';
 import SideDrawer from '@/components/side-drawer';
 import FileUpload from '@/components/file-upload';
@@ -45,7 +45,8 @@ import { useSongForm } from '@/hooks/songs/useSongForm';
 import { useSongFilter } from '@/hooks/songs/useSongFilter';
 import { useSongSelection } from '@/hooks/songs/useSongSelection';
 import { useSongSuggestions } from '@/hooks/songs/useSongSuggestions';
-
+import SpeedDial from '@/components/ui/speed-dial';
+import { Spinner } from '@/components/ui/spinner';
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -76,10 +77,11 @@ export default function SongsIndex({ songs, folders, filters }: Props) {
     } = useSongForm({ flash, onAfterClose: resetSuggestions });
 
     const {
-        search, localSearch, localFolder, localStatus, activeFilterCount,
+    search, localSearch, localFolder, isSearching, localStatus, activeFilterCount,
+        displayedSongs,
         handleSearchChange, handleSearchClear,
         handleFolderChange, handleStatusChange, handleReset,
-    } = useSongFilter(filters);
+    } = useSongFilter(filters, songs.data);
 
     const {
         selectedIds, bulkDeleteDialog, setBulkDeleteDialog, mobileSelectMode,
@@ -120,15 +122,6 @@ export default function SongsIndex({ songs, folders, filters }: Props) {
         setDeleteTarget(null);
     }, [deleteTarget, flash]);
 
-    const displayedSongs = useMemo(() => {
-        if (!localSearch.trim()) return songs.data;
-        const q = localSearch.toLowerCase();
-        return songs.data.filter((s) =>
-            s.title.toLowerCase().includes(q) ||
-            (s.publisher ?? '').toLowerCase().includes(q)
-        );
-    }, [songs.data, localSearch]);
-
     // ── Render ────────────────────────────────────────────────────────────────
 
     const folderMap = useMemo(() =>
@@ -147,7 +140,7 @@ export default function SongsIndex({ songs, folders, filters }: Props) {
                         <p className="text-muted-foreground text-sm">{songs.total} saved songs</p>
                     </div>
                     {isAdmin && (
-                        <div className="flex gap-2">
+                        <div className="hidden md:flex gap-2">
                             <Button variant="outline" onClick={() => setBulkOpen(true)} className="cursor-pointer">
                                 <FileSpreadsheet className="mr-2 h-4 w-4" /> Bulk Add
                             </Button>
@@ -292,7 +285,17 @@ export default function SongsIndex({ songs, folders, filters }: Props) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {displayedSongs.length === 0 && (
+                            {isSearching && localSearch && ( 
+                                <TableRow>
+                                    <TableCell colSpan={7} className="py-12 text-center">
+                                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                        <Spinner className="size-4" />
+                                        <span className="text-sm">Searching...</span>
+                                    </div>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {!isSearching && displayedSongs.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={7}>
                                         <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -315,7 +318,7 @@ export default function SongsIndex({ songs, folders, filters }: Props) {
                                     </TableCell>
                                 </TableRow>
                             )}
-                            {displayedSongs.map((song, idx) => (
+                            {!(isSearching && localSearch) && displayedSongs.map((song, idx) => (
                                 <TableRow
                                     key={song.id}
                                     className={`group cursor-pointer hover:bg-muted/30 transition-colors
@@ -388,7 +391,13 @@ export default function SongsIndex({ songs, folders, filters }: Props) {
 
                 {/* ── Mobile cards ── */}
                 <div className="md:hidden flex flex-col gap-2">
-                    {displayedSongs.length === 0 && (
+                    {isSearching && localSearch &&(
+                        <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
+                        <Spinner className="size-4" />
+                        <span className="text-sm">Searching...</span>
+                        </div>
+                    )}
+                    {!isSearching && displayedSongs.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3">
                             <Search className="h-8 w-8 text-muted-foreground/40" />
                             <p className="text-sm text-muted-foreground">
@@ -412,7 +421,7 @@ export default function SongsIndex({ songs, folders, filters }: Props) {
                             Tap to select · Long-press to start over
                         </p>
                     )}
-                    {displayedSongs.map((song) => {
+                    {!(isSearching && localSearch) && displayedSongs.map((song) => {
                         const isSelected = selectedIds.has(song.id);
                         return (
                             <SongCard
@@ -491,7 +500,7 @@ export default function SongsIndex({ songs, folders, filters }: Props) {
                             type="submit"
                             form="song-form"
                             disabled={processing || !isFormReady}
-                            className="cursor-pointer min-w-24"
+                            className="cursor-pointer min-w-24 grow"
                         >
                             {processing ? 'Saving...' : editSong ? 'Save Changes' : 'Add Song'}
                         </Button>
@@ -979,6 +988,12 @@ export default function SongsIndex({ songs, folders, filters }: Props) {
                 onClose={() => setBulkOpen(false)}
                 folders={folders}
                 onSuccess={() => setBulkOpen(false)}
+            />
+            <SpeedDial
+                actions={[
+                    { label: 'New Song', description: 'Add one at a time', icon: Music, onClick: openCreate },
+                    { label: 'Bulk Import', description: 'Add many at once', icon: FileSpreadsheet, onClick: () => setBulkOpen(true) },
+                ]}
             />
         <style>{`
             @keyframes bulkToolbar {

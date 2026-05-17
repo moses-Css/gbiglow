@@ -7,7 +7,7 @@ import {
     AlertDialogContent, AlertDialogDescription,
     AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, CheckCircle2 } from 'lucide-react';
 import ScheduleHeader from '@/components/schedule/ScheduleHeader';
 import ScheduleSkeleton from '@/components/schedule/ScheduleSkeleton';
 import SessionBlock from '@/components/schedule/SessionBlock';
@@ -34,8 +34,9 @@ export default function ScheduleShow({ schedule, allSongs }: Props) {
     const [saving, setSaving]               = useState(false);
     const [unsavedDialog, setUnsavedDialog] = useState(false);
     const [savedAt, setSavedAt]             = useState<number | null>(null);
-    const [savedRecently, setSavedRecently] = useState(false);
     const [emptySessionKeys, setEmptySessionKeys] = useState<string[]>([]);
+    const [deleteSessionDialog, setDeleteSessionDialog] = useState<{ key: string; label: string; songCount: number } | null>(null);
+    const [discardDialog, setDiscardDialog] = useState(false);
     const pendingNavRef                     = useRef<(() => void) | null>(null);
     const sessionRefs                       = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -123,8 +124,7 @@ export default function ScheduleShow({ schedule, allSongs }: Props) {
                 onSuccess: () => {
                     setSaving(false);
                     setSavedAt(Date.now());
-                    setSavedRecently(true);
-                    setTimeout(() => setSavedRecently(false), 3000);
+                    flash('Schedule saved successfully.');
                 },
                 onError: () => {
                     setSaving(false);
@@ -155,6 +155,50 @@ export default function ScheduleShow({ schedule, allSongs }: Props) {
         );
     }, [schedule, flash]);
 
+    const handleDeleteSession = useCallback((key: string) => {
+        const session = sessions.find((s) => s._key === key);
+        if (!session) return;
+
+        // If session has songs, show confirm dialog
+        if (session.songs.length > 0) {
+            setDeleteSessionDialog({
+                key: session._key,
+                label: session.label,
+                songCount: session.songs.length,
+            });
+        } else {
+            // Empty session, delete directly
+            removeSession(key);
+        }
+    }, [sessions, removeSession]);
+
+    const confirmDeleteSession = useCallback(() => {
+        if (deleteSessionDialog) {
+            removeSession(deleteSessionDialog.key);
+            setDeleteSessionDialog(null);
+        }
+    }, [deleteSessionDialog, removeSession]);
+
+    const handleDiscardChanges = useCallback(() => {
+        if (!hasUnsavedChanges || saving) return;
+        setDiscardDialog(true);
+    }, [hasUnsavedChanges, saving]);
+
+    const confirmDiscardChanges = useCallback(() => {
+        resetSessions(schedule.sessions ?? []);
+        resetSnapshot(schedule.sessions ?? []);
+        setEmptySessionKeys([]);
+        setDiscardDialog(false);
+        flash('All changes discarded');
+    }, [
+        schedule.sessions,
+        resetSessions,
+        resetSnapshot,
+        flash,
+    ]);
+
+    
+
     const isMultiSession = schedule.type === 'multi_session';
 
     // ── Render ────────────────────────────────────────────────────────────────
@@ -170,7 +214,7 @@ export default function ScheduleShow({ schedule, allSongs }: Props) {
     return (
         <AppLayout>
             <Head title={schedule.event_name} />
-            <div className="max-w-2xl flex flex-col gap-6 p-4 md:p-6 pb-28">
+            <div className="max-w-2xl flex flex-col gap-6 p-4 md:p-6 pb-28 w-full self-center">
 
                 {/* Header */}
                 <ScheduleHeader
@@ -180,6 +224,7 @@ export default function ScheduleShow({ schedule, allSongs }: Props) {
                     onBack={handleBack}
                     onSave={handleSave}
                     onTogglePublish={handleTogglePublish}
+                    onDiscard={handleDiscardChanges}
                 />
 
                 {/* Session blocks */}
@@ -204,7 +249,7 @@ export default function ScheduleShow({ schedule, allSongs }: Props) {
                                 }}
                                 onRemoveSong={removeSong}
                                 onReorderSongs={reorderSongs}
-                                onRemoveSession={removeSession}
+                                onRemoveSession={handleDeleteSession}
                                 onApplySameAs={applySameAs}
                                 onClearSameAs={clearSameAs}
                                 isSongAdded={isSongAdded}
@@ -229,22 +274,12 @@ export default function ScheduleShow({ schedule, allSongs }: Props) {
             </div>
 
             {/* Mobile sticky save bar — only on mobile */}
-            {(hasUnsavedChanges || saving || savedRecently) && (
+            {(hasUnsavedChanges || saving) && (
                 <div className="fixed bottom-4 left-4 right-4 z-50 md:hidden
                                 flex items-center gap-3 px-4 py-3
                                 rounded-2xl border border-border bg-background/95 backdrop-blur-md
                                 shadow-xl transition-all">
-                    {savedRecently ? (
-                        /* Saved state — full width confirmation */
-                        <p className="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400 w-full justify-center">
-                            <span className="h-4 w-4 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                                <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </span>
-                            All changes saved
-                        </p>
-                    ) : saving ? (
+                    {saving ? (
                         /* Saving state — full width spinner */
                         <Button
                             size="sm"
@@ -260,6 +295,16 @@ export default function ScheduleShow({ schedule, allSongs }: Props) {
                             <p className="text-sm text-muted-foreground flex-1 truncate">
                                 Unsaved changes
                             </p>
+
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleDiscardChanges}
+                                className="cursor-pointer flex-shrink-0 text-muted-foreground"
+                            >
+                                Discard
+                            </Button>
+
                             <Button
                                 size="sm"
                                 onClick={handleSave}
@@ -296,7 +341,69 @@ export default function ScheduleShow({ schedule, allSongs }: Props) {
                                 pendingNavRef.current = null;
                             }}
                         >
-                            Leave anyway
+                            Leave Anyway
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog
+                open={!!deleteSessionDialog}
+                onOpenChange={(open) => {
+                    if (!open) setDeleteSessionDialog(null);
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {deleteSessionDialog
+                                ? `Delete ${deleteSessionDialog.label}?`
+                                : 'Delete Session?'}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {deleteSessionDialog && deleteSessionDialog.songCount > 0
+                                ? `${deleteSessionDialog.songCount} song${deleteSessionDialog.songCount === 1 ? '' : 's'} will be removed from this session.`
+                                : 'This session will be removed from your schedule.'}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
+                            className="cursor-pointer"
+                            onClick={() => setDeleteSessionDialog(null)}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+
+                        <AlertDialogAction
+                            className="cursor-pointer bg-destructive hover:bg-destructive/90"
+                            onClick={confirmDeleteSession}
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={discardDialog} onOpenChange={setDiscardDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Discard All Changes?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Everything you've changed will be lost.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="cursor-pointer">
+                            Keep Editing
+                        </AlertDialogCancel>
+
+                        <AlertDialogAction
+                            className="cursor-pointer bg-destructive hover:bg-destructive/90"
+                            onClick={confirmDiscardChanges}
+                        >
+                            Discard
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

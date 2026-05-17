@@ -8,7 +8,9 @@ interface Filters {
     status?: string;
 }
 
-export function useSongFilter(initialFilters: Filters) {
+import { Song } from '@/types';
+
+export function useSongFilter(initialFilters: Filters, songsData: Song[]) { // ← tambah songsData param
     const filtersRef = useRef(initialFilters);
     useEffect(() => { filtersRef.current = initialFilters; }, [initialFilters]);
 
@@ -16,9 +18,11 @@ export function useSongFilter(initialFilters: Filters) {
     const [localSearch, setLocalSearch] = useState(initialFilters.search ?? '');
     const [localFolder, setLocalFolder] = useState(initialFilters.folder ?? 'all');
     const [localStatus, setLocalStatus] = useState(initialFilters.status ?? 'all');
+    const [isSearching, setIsSearching] = useState(false);
 
     const filterDebounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const searchDebounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const baseDataRef    = useRef<Song[]>(songsData); // ← snapshot sebelum search
 
     const applyFilters = useCallback((overrides: Partial<Filters>) => {
         clearTimeout(filterDebounce.current);
@@ -31,6 +35,7 @@ export function useSongFilter(initialFilters: Filters) {
                 preserveState: true,
                 replace:       true,
                 only:          ['songs', 'filters'],
+                onFinish:      () => setIsSearching(false),
             });
         }, 400);
     }, []);
@@ -38,15 +43,19 @@ export function useSongFilter(initialFilters: Filters) {
     const handleSearchChange = useCallback((val: string) => {
         setSearch(val);
         setLocalSearch(val);
-        clearTimeout(searchDebounce.current);
-        searchDebounce.current = setTimeout(() => {
-            applyFilters({ search: val.trim() || undefined });
-        }, 300);
+
+        const trimmed = val.trim();
+        if (trimmed !== (filtersRef.current.search ?? '')) {
+            setIsSearching(true);
+        }
+
+        applyFilters({ search: trimmed || undefined });
     }, [applyFilters]);
 
     const handleSearchClear = useCallback(() => {
         setSearch('');
         setLocalSearch('');
+        setIsSearching(true);
         clearTimeout(searchDebounce.current);
         applyFilters({ search: undefined });
     }, [applyFilters]);
@@ -69,6 +78,29 @@ export function useSongFilter(initialFilters: Filters) {
         applyFilters({ folder: undefined, status: undefined, search: undefined });
     }, [applyFilters]);
 
+    const displayedSongs = useMemo(() => {
+        const q = localSearch.trim().toLowerCase();
+
+        if (!q) {
+            if (isSearching) {
+                // Clear was clicked, waiting for server — show snapshot
+                return baseDataRef.current;
+            }
+            // No active search, server responded — safe to update snapshot
+            baseDataRef.current = songsData;
+            return songsData;
+        }
+
+        if (isSearching) {
+            return baseDataRef.current;
+        }
+
+        return songsData.filter((s) =>
+            s.title.toLowerCase().includes(q) ||
+            (s.publisher ?? '').toLowerCase().includes(q)
+        );
+    }, [songsData, localSearch, isSearching]);
+
     const activeFilterCount = useMemo(() => {
         let count = 0;
         if (filtersRef.current.folder) count++;
@@ -80,9 +112,11 @@ export function useSongFilter(initialFilters: Filters) {
         // State
         search,
         localSearch,
+        isSearching,
         localFolder,
         localStatus,
         activeFilterCount,
+        displayedSongs, // ← expose dari hook
 
         // Handlers
         handleSearchChange,

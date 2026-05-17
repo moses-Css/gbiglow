@@ -13,6 +13,7 @@ interface ScheduleHeaderProps {
     onBack:            () => void;
     onSave:            () => void;
     onTogglePublish:   () => void;
+    onDiscard:         () => void;
 }
 
 function UnsavedBadge() {
@@ -31,6 +32,7 @@ export default function ScheduleHeader({
     onBack,
     onSave,
     onTogglePublish,
+    onDiscard,
 }: ScheduleHeaderProps) {
     const formattedDate = new Date(schedule.event_date).toLocaleDateString('en-US', {
         weekday: 'long',
@@ -109,6 +111,18 @@ export default function ScheduleHeader({
 
                 <div className="flex-1" />
 
+                {hasUnsavedChanges && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={onDiscard}
+                        disabled={saving}
+                        className="cursor-pointer text-muted-foreground hover:text-destructive"
+                    >
+                        Discard Changes
+                    </Button>
+                )}
+
                 <Button
                     size="sm"
                     onClick={onSave}
@@ -116,7 +130,12 @@ export default function ScheduleHeader({
                     className="cursor-pointer min-w-28"
                 >
                     {saving
-                        ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Saving...</>
+                        ? (
+                            <>
+                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                Saving...
+                            </>
+                        )
                         : 'Save Changes'
                     }
                 </Button>

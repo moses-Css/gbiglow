@@ -186,5 +186,6 @@ export function getScheduleDirtyState(
             .forEach((d) => dirtyKeys.add(d._key));
     }
 
-    return { isDirty: dirtyKeys.size > 0, dirtyKeys };
+    // FIXED: Kalau jumlah session berubah (add/delete), schedule dirty
+    return { isDirty: dirtyKeys.size > 0 || drafts.length !== originals.length, dirtyKeys };
 }

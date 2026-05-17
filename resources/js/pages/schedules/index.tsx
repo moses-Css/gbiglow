@@ -40,7 +40,7 @@ import { show } from '@/routes/schedules';
 import type { Schedule, Paginated, ScheduleType } from '@/types';
 import { format, parse, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
-
+import SpeedDial from '@/components/ui/speed-dial';
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -316,7 +316,7 @@ export default function SchedulesIndex({ schedules, categories, filters }: Props
                         <h1 className="text-xl font-bold md:text-2xl">Schedules</h1>
                         <p className="text-muted-foreground text-sm">Your weekly setlists, all in one place.</p>
                     </div>
-                    <Button onClick={openCreate} size="sm" className="cursor-pointer">
+                    <Button onClick={openCreate} size="sm" className="cursor-pointer hidden md:flex">
                         <Plus className="mr-2 h-4 w-4" /> New Schedule
                     </Button>
                 </div>
@@ -459,7 +459,7 @@ export default function SchedulesIndex({ schedules, categories, filters }: Props
                             type="submit"
                             form="schedule-form"
                             disabled={processing}
-                            className="cursor-pointer min-w-28"
+                            className="cursor-pointer min-w-28 grow"
                         >
                             {processing
                                 ? (editSchedule ? 'Saving...' : 'Creating...')
@@ -570,6 +570,7 @@ export default function SchedulesIndex({ schedules, categories, filters }: Props
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            <SpeedDial onClick={openCreate} />
         </AppLayout>
     );
 }
