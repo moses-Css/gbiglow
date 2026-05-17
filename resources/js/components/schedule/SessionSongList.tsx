@@ -1,7 +1,7 @@
 import {
     DndContext,
     closestCenter,
-    PointerSensor,
+    MouseSensor,
     TouchSensor,
     useSensor,
     useSensors,
@@ -70,11 +70,11 @@ export default function SessionSongList({
     onReorder,
 }: SessionSongListProps) {
     const sensors = useSensors(
-        useSensor(PointerSensor, {
+        useSensor(MouseSensor, {
             activationConstraint: { distance: 8 },
         }),
         useSensor(TouchSensor, {
-            activationConstraint: { delay: 300, tolerance: 5 },
+            activationConstraint: { delay: 300, tolerance: 0 },
         }),
     );
 

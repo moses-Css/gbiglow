@@ -121,9 +121,9 @@ function SessionCard({
         <div
             className={cn(
                 'flex items-center gap-3 rounded-xl border bg-card px-3 py-3',
-                'transition-colors',
+                'transition-all duration-200 ease-in-out',
                 isDragging
-                    ? 'shadow-lg border-primary/30 bg-card'
+                    ? 'shadow-lg border-primary/30 scale-105 bg-border'
                     : 'hover:bg-muted/30',
             )}
         >

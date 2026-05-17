@@ -30,7 +30,9 @@ class ScheduleService
 
     public function updateSchedule(Schedule $schedule, array $data): Schedule
     {
-        $schedule->update($data);
+        $schedule->update([...$data, 
+            'copied_from_id' => null,
+        ]);
 
         if (isset($data['sessions'])) {
             $this->syncSessions($schedule, $data['sessions']);
