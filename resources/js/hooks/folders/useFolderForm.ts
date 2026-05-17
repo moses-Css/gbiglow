@@ -58,14 +58,14 @@ export function useFolderForm({ flash }: UseFolderFormOptions) {
         if (editFolder) {
             put(update(editFolder.id).url, {
                 onSuccess: () => {
-                    flash(`Folder "${data.name}" berhasil diupdate.`);
+                    flash(`Folder "${data.name}" updated successfully.`);
                     handleClose();
                 },
             });
         } else {
             post(store().url, {
                 onSuccess: () => {
-                    flash(`Folder "${data.name}" berhasil dibuat.`);
+                    flash(`Folder "${data.name}" created successfully.`);
                     handleClose();
                 },
             });
@@ -84,7 +84,7 @@ export function useFolderForm({ flash }: UseFolderFormOptions) {
         router.delete(destroy(deleteTarget.id).url, {
             preserveScroll: true,
             onSuccess: () => {
-                flash(`Folder "${name}" berhasil dihapus.`);
+                flash(`Folder "${name}" deleted successfully.`);
                 setDeleteTarget(null);
             },
         });

@@ -21,6 +21,8 @@ import { useFolderForm } from '@/hooks/folders/useFolderForm';
 import { PRESET_COLORS } from '@/lib/colors';
 import type { Folder } from '@/types';
 
+import SpeedDial from '@/components/ui/speed-dial';
+
 interface Props {
     folders: Folder[];
 }
@@ -46,11 +48,11 @@ export default function FoldersIndex({ folders }: Props) {
                     <div>
                         <h1 className="text-2xl font-bold">Folders</h1>
                         <p className="text-muted-foreground text-sm">
-                            Kelola kategori & warna folder lagu
+                            Your folders, all in one place.
                         </p>
                     </div>
-                    <Button onClick={openCreate} className="cursor-pointer">
-                        <Plus className="mr-2 h-4 w-4" /> Buat Folder
+                    <Button onClick={openCreate} className="cursor-pointer hidden md:flex">
+                        <Plus className="mr-2 h-4 w-4" /> Create Folder
                     </Button>
                 </div>
 
@@ -126,7 +128,7 @@ export default function FoldersIndex({ folders }: Props) {
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
-                        <Field label="Nama Folder" required error={errors.name}>
+                        <Field label="Folder Name" required error={errors.name}>
                             <Input
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
@@ -136,7 +138,7 @@ export default function FoldersIndex({ folders }: Props) {
 
                         {/* Color picker */}
                         <div className="flex flex-col gap-2">
-                            <Label>Warna Folder</Label>
+                            <Label>Folder Color</Label>
                             <div className="flex flex-wrap gap-2">
                                 {PRESET_COLORS.map((color) => (
                                     <button
@@ -168,7 +170,7 @@ export default function FoldersIndex({ folders }: Props) {
                             )}
                         </div>
 
-                        <Field label="Deskripsi" hint="Opsional">
+                        <Field label="Description" hint="Opsional">
                             <Textarea
                                 rows={2}
                                 value={data.description}
@@ -183,15 +185,15 @@ export default function FoldersIndex({ folders }: Props) {
                                 checked={data.is_active}
                                 onCheckedChange={(v) => setData('is_active', v)}
                             />
-                            <Label htmlFor="is_active">Folder aktif</Label>
+                            <Label htmlFor="is_active">Active Folder</Label>
                         </div>
 
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={handleClose} className="cursor-pointer">
-                                Batal
+                                Cancel
                             </Button>
                             <Button type="submit" disabled={processing} className="cursor-pointer">
-                                {processing ? 'Menyimpan...' : editFolder ? 'Simpan' : 'Buat'}
+                                {processing ? 'Saving...' : editFolder ? 'Save' : 'Create'}
                             </Button>
                         </DialogFooter>
                     </form>
@@ -202,21 +204,22 @@ export default function FoldersIndex({ folders }: Props) {
             <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Hapus folder ini?</AlertDialogTitle>
+                        <AlertDialogTitle>Remove {deleteTarget?.name}?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            "{deleteTarget?.name}" akan dihapus permanen. Folder yang masih memiliki lagu tidak bisa dihapus.
+                            Are you sure you want to remove "{deleteTarget?.name}"?
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel className="cursor-pointer">Batal</AlertDialogCancel>
+                        <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             className="cursor-pointer bg-destructive hover:bg-destructive/90"
                             onClick={confirmDelete}>
-                            Hapus
+                            Delete
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+             <SpeedDial onClick={openCreate} />
         </AppLayout>
     );
 }

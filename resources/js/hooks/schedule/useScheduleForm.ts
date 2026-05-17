@@ -103,7 +103,7 @@ export function useScheduleForm(schedules: Schedule[]) {
         router.delete(destroy(deleteTarget.id).url, {
             preserveScroll: true,
             onSuccess: () => {
-                flash(`"${name}" deleted.`);
+                flash(`"${name}" deleted successfully.`);
                 setDeleteTarget(null);
             },
         });

@@ -26,9 +26,9 @@ export default function SpeedDial({ onClick, actions }: SpeedDialProps) {
             type="button"
             className="
                 h-14 w-14 rounded-full
-                bg-white/5 backdrop-blur-xl text-white
+                bg-white/5 backdrop-blur-xl text-black dark:text-white
                 border border-white/20
-                shadow-xl shadow-black/20
+                shadow-md shadow-black/20
                 flex items-center justify-center
                 transition-transform active:scale-95
                 cursor-pointer
