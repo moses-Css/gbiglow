@@ -19,6 +19,13 @@
             })();
         </script>
 
+        @if (request()->routeIs('frontend.*'))
+            <script>
+                document.documentElement.classList.add('frontend-theme');
+            </script>
+        @endif
+
+
         {{-- Inline style to set the HTML background color based on our theme in app.css --}}
         <style>
             html {

@@ -10,8 +10,20 @@ use App\Http\Controllers\Settings\AppearanceController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\TwoFactorController;
+use Laravel\Fortify\Http\Controllers\PasswordResetLinkController;
+use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
+use Laravel\Fortify\Http\Controllers\RegisteredUserController;
+use Laravel\Fortify\Http\Controllers\NewPasswordController;
+use Laravel\Fortify\Http\Controllers\EmailVerificationPromptController;
 
-
+// FRONTEND THEME
+Route::middleware(['web', 'frontend.theme'])->name('frontend.')->group(function () {
+    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
+    Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+    Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
+    Route::get('/email/verify', [EmailVerificationPromptController::class, '__invoke'])->name('verification.notice');
+});
 
 Route::get('/', function () {
     return Inertia::render('dashboard');
