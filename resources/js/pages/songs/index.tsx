@@ -45,6 +45,7 @@ import { useSongForm } from '@/hooks/songs/useSongForm';
 import { useSongFilter } from '@/hooks/songs/useSongFilter';
 import { useSongSelection } from '@/hooks/songs/useSongSelection';
 import { useSongSuggestions } from '@/hooks/songs/useSongSuggestions';
+import { useSongAutoEdit } from '@/hooks/songs/useSongAutoEdit';
 import SpeedDial from '@/components/ui/speed-dial';
 import { Spinner } from '@/components/ui/spinner';
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -53,10 +54,11 @@ interface Props {
     songs:   Paginated<Song>;
     folders: Folder[];
     filters: { search?: string; folder?: string; status?: string };
+    autoEditSong?: Song | null;
 }
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function SongsIndex({ songs, folders, filters }: Props) {
+export default function SongsIndex({ songs, folders, filters, autoEditSong }: Props) {
     const { auth } = usePage<{ auth: { user: { main_role: string } } }>().props;
     const isAdmin  = auth.user.main_role === 'admin';
     const { flash } = useFlash();
@@ -96,6 +98,7 @@ export default function SongsIndex({ songs, folders, filters }: Props) {
     const [bulkOpen, setBulkOpen]             = useState(false);
     const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
 
+    useSongAutoEdit(autoEditSong, openEdit);
     // ── Actions ───────────────────────────────────────────────────────────────
 
     const handleToggleStatus = useCallback((song: Song) => {

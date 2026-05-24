@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import FrontendLayout from '@/layouts/frontend-layout';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, type PanInfo } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -40,10 +40,34 @@ export default function ActionSheet({
         };
     }, [open]);
 
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [canDrag, setCanDrag] = useState(true);
+
+    // Reset when sheet closes
+    useEffect(() => {
+        if (!open) {
+            setIsExpanded(false);
+            setCanDrag(true);
+        }
+    }, [open]);
+
+    const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+        const { offset, velocity } = info;
+        if (velocity.y > 500) { onClose(); return; }
+        if (offset.y < -60) { setIsExpanded(true); return; }
+        if (offset.y > 150) {
+            isExpanded ? setIsExpanded(false) : onClose();
+        }
+    };
+
+    const handleContentScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        setCanDrag(e.currentTarget.scrollTop === 0);
+    };
+
     return createPortal(
         <AnimatePresence>
             {open && (
-                <FrontendLayout>
+                <>
                     {/* Backdrop */}
                     <motion.div
                         key="as-backdrop"
@@ -60,18 +84,23 @@ export default function ActionSheet({
                     <motion.div
                         key="as-mobile"
                         initial={{ y: '100%' }}
-                        animate={{ y: 0 }}
+                        animate={{ y: 0, maxHeight: isExpanded ? '90vh' : '58vh' }}
                         exit={{ y: '100%' }}
                         transition={{
                             type: 'spring',
                             damping: 30,
                             stiffness: 300,
                         }}
+                        drag={canDrag ? 'y' : false}
+                        dragConstraints={{ top: 0, bottom: 0 }}
+                        dragElastic={{ top: 0, bottom: 0.4 }}
+                        dragMomentum={false}
+                        onDragEnd={handleDragEnd}
                         className={cn(
                             'fixed bottom-0 left-0 right-0 z-50',
-                            'md:hidden', // Hide on desktop
+                            'md:hidden',
                             'bg-background frontend-theme rounded-t-4xl shadow-2xl',
-                            'max-h-[90vh] flex flex-col'
+                            'flex flex-col overflow-hidden'
                         )}
                         role="dialog"
                         aria-modal
@@ -94,7 +123,10 @@ export default function ActionSheet({
                         )}
 
                         {/* Content */}
-                        <div className="overflow-y-auto flex-1 px-8">
+                        <div
+                            className="overflow-y-auto flex-1 px-8"
+                            onScroll={handleContentScroll}
+                        >
                             {children}
                         </div>
 
@@ -106,7 +138,7 @@ export default function ActionSheet({
                         )}
 
                         {/* Bottom padding for safe area */}
-                        <div className="h-6 flex-shrink-0" />
+                        <div className="h-7 flex-shrink-0" />
                     </motion.div>
 
                     {/* Desktop: Center Modal */}
@@ -161,7 +193,7 @@ export default function ActionSheet({
                             </div>
                         )}
                     </motion.div>
-                </FrontendLayout>
+                </>
             )}
         </AnimatePresence>,
         document.body

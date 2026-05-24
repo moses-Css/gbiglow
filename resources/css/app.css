@@ -13,6 +13,8 @@
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
+    --background-image-auth-login: url('/images/auth/login-bg.png');
+
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
@@ -143,25 +145,25 @@ body {
 /* Frontend Theme Scoped Overrides */
 .frontend-theme {
   --background: oklch(95.5% 0.005 100);       /* #f0f0f0 */
-  --foreground: oklch(18.2% 0.005 100);       /* #232323 (Text) */
+  --foreground: oklch(0.256 0 0);       /* #232323 (Text) */
   --card: oklch(100% 0 0);                    /* #ffffff (Surface) */
-  --card-foreground: oklch(18.2% 0.005 100);  /* #232323 */
+  --card-foreground: oklch(0.256 0 0);  /* #232323 */
   --border: oklch(91.7% 0.005 100);           /* #E6E6E6 */
   --muted-foreground: oklch(81.3% 0 0);       /* #C7C7C7 */
-  --primary: oklch(62.5% 0.198 259);          /* #3B71F2 */
+  --primary: oklch(0.564 0.172 264.406);          /* #416ED9 */
   --primary-foreground: oklch(100% 0 0);      /* #ffffff */
 }
 
 .dark .frontend-theme,
 .frontend-theme.dark {
-  --background: oklch(18.2% 0.005 100);       /* #232323 */
+  --background: oklch(0.256 0 0);       /* #232323 */
   --foreground: oklch(95.5% 0.005 100);       /* #f0f0f0 (Text) */
-  --card: oklch(23.5% 0.008 100);             /* #303030 (Surface) */
+  --card: oklch(0.309 0 0);             /* #303030 (Surface) */
   --card-foreground: oklch(95.5% 0.005 100);  /* #f0f0f0 */
   --border: oklch(33.1% 0.008 100);           /* #464646 */
   --muted-foreground: oklch(60.1% 0 0);       /* #8B8B8B */
-  --primary: oklch(62.5% 0.198 259);          /* #3B71F2 */
-  --primary-foreground: oklch(18.2% 0.005 100); /* #232323 */
+  --primary: oklch(0.49 0.146 264.792);          /* #365AB2 */
+  --primary-foreground: oklch(0.256 0 0); /* #232323 */
 }
 
 
@@ -177,22 +179,31 @@ body {
 
 /* Auth Page Radial Gradient Overlay */
 .auth-gradient-overlay {
-  background: radial-gradient(
-    ellipse at center,
-    rgba(247, 247, 247, 0) 0%,
-    rgba(35, 35, 35, 1) 100%
-  );
+  background:radial-gradient( ellipse 340% 100% at 50% -10%, rgba(247, 247, 247, 0) 20%, rgba(36, 36, 36, 1) 85% )
 }
 
 /* Auth Page Background */
-.auth-background {
-  background-image: url('/images/auth/login-bg.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+.bg-auth-login {
+    background-image: url('/images/auth/login-bg.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+@media (min-width: 768px) {
+    .bg-auth-login {
+        background-image: none;
+        background: linear-gradient(135deg, #0d0d0d 0%, #0f102b 40%, #131335 100%)
+    }
 }
 
 /* Fallback gradient if image not loaded */
 .auth-background-fallback {
   background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+}
+
+.bg-auth-login {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }

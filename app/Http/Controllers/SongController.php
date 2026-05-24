@@ -50,6 +50,10 @@ class SongController extends Controller
                     ->where('is_active', true)
                     ->get()
             ),
+            'autoEditSong' => $request->filled('edit')
+                ? Song::with('folder:id,name,color_code')
+                    ->find($request->integer('edit'))
+                : null,
         ]);
     }
 

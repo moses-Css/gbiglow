@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
-
+import AppLogoIcon from '@/components/app-logo-icon';
 type Props = {
     status?: string;
     canResetPassword: boolean;
@@ -28,16 +28,22 @@ export default function Login({
             <Head title="Praise & Worship Sources" />
 
             {/* Splash Screen */}
-            <div className="relative min-h-screen flex flex-col items-center justify-end md:justify-center overflow-hidden auth-background auth-background-fallback px-8 py-10">
+            <div className="relative min-h-screen flex flex-col items-center justify-end md:justify-center overflow-hidden bg-auth-login px-8 py-10">
                 {/* Radial Gradient Overlay */}
                 <div className="absolute inset-0 auth-gradient-overlay" />
                 {/* Label */}
                 <div className="text-md text-foreground font-light absolute top-10">
-                    GBI Altar Tabernakel Glow Batam
+                    GBI Altar Tabernakel Batam
                 </div>
 
                 {/* Content */}
                 <div className="relative z-10 text-center w-full max-w-md">
+                    
+                    {/* App Logo */}
+                    <div className="flex justify-center mb-3">
+                        <AppLogoIcon className="size-14 text-foreground bg-background/90 p-2 border rounded-lg" />
+                    </div>
+
                     {/* Heading */}
                     <h1 className="text-4xl md:text-5xl font-thin tracking-tight text-foreground mb-2">
                         Praise & Worship
@@ -54,18 +60,15 @@ export default function Login({
                     </p>
 
                     {/* Get Started Button */}
-                    <button
+                    
+
+                    <Button
+                        size="lg"
+                        className="mt-4 w-full"
                         onClick={() => setIsLoginOpen(true)}
-                        className="
-                            px-8 py-5 rounded-full font-medium text-base w-full 
-                            bg-foreground text-background 
-                            hover:opacity-85  /* Sedikit lebih transparan saat hover */
-                            active:scale-[0.98] 
-                            transition-all frontend-theme
-                        "
-                        >
+                    >
                         Get Started
-                    </button>
+                    </Button>
                 </div>
             </div>
 
@@ -137,8 +140,9 @@ export default function Login({
 
                                 {/* Submit Button */}
                                 <Button
+                                    size="lg"
                                     type="submit"
-                                    className="mt-4 w-full"
+                                    className="w-full"
                                     tabIndex={4}
                                     disabled={processing}
                                     data-test="login-button"

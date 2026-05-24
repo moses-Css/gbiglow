@@ -15,9 +15,10 @@ use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 use Laravel\Fortify\Http\Controllers\RegisteredUserController;
 use Laravel\Fortify\Http\Controllers\NewPasswordController;
 use Laravel\Fortify\Http\Controllers\EmailVerificationPromptController;
+use App\Http\Controllers\DashboardController;
 
 // FRONTEND THEME
-Route::middleware(['web', 'frontend.theme'])->name('frontend.')->group(function () {
+Route::middleware(['web', 'frontend.theme'])->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
     Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
@@ -25,9 +26,9 @@ Route::middleware(['web', 'frontend.theme'])->name('frontend.')->group(function 
     Route::get('/email/verify', [EmailVerificationPromptController::class, '__invoke'])->name('verification.notice');
 });
 
-Route::get('/', function () {
-    return Inertia::render('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/', DashboardController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 // Admin-only routes
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {

@@ -19,7 +19,7 @@
             })();
         </script>
 
-        @if (request()->routeIs('frontend.*'))
+        @if (request()->attributes->get('is_frontend_theme'))
             <script>
                 document.documentElement.classList.add('frontend-theme');
             </script>

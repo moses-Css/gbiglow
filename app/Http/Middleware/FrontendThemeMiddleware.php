@@ -16,6 +16,7 @@ class FrontendThemeMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $request->attributes->set('is_frontend_theme', true);
         Inertia::share('is_frontend', true);
         return $next($request);
     }
