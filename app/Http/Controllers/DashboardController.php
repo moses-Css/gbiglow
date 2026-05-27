@@ -27,6 +27,7 @@ class DashboardController extends Controller
                 now()->startOfDay(),
                 now()->addDays(7)->endOfDay(),
             ])
+            ->where('is_published', true)
             ->orderBy('event_date')
             ->get();
  

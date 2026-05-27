@@ -85,27 +85,25 @@ export default function Login({
                 >
                     {({ processing, errors }) => (
                         <>
-                            <div className="grid gap-6">
+                            <div className="grid gap-6 pt-1">
                                 {/* Email Field */}
                                 <div className="grid gap-2">
-                                    <Label htmlFor="email">Email address</Label>
                                     <Input
                                         id="email"
                                         type="email"
                                         name="email"
+                                        label="Email"
                                         required
                                         autoFocus
                                         tabIndex={1}
                                         autoComplete="email"
-                                        placeholder="email@example.com"
                                     />
                                     <InputError message={errors.email} />
                                 </div>
 
                                 {/* Password Field */}
                                 <div className="grid gap-2">
-                                    <div className="flex items-center">
-                                        <Label htmlFor="password">Password</Label>
+                                    <div className=" hidden">
                                         {canResetPassword && (
                                             <TextLink
                                                 href={request()}
@@ -120,10 +118,10 @@ export default function Login({
                                         id="password"
                                         type="password"
                                         name="password"
+                                        label="Password"
                                         required
                                         tabIndex={2}
                                         autoComplete="current-password"
-                                        placeholder="Password"
                                     />
                                     <InputError message={errors.password} />
                                 </div>
@@ -135,7 +133,7 @@ export default function Login({
                                         name="remember"
                                         tabIndex={3}
                                     />
-                                    <Label htmlFor="remember">Remember me</Label>
+                                    <Label htmlFor="remember">Save login info</Label>
                                 </div>
 
                                 {/* Submit Button */}

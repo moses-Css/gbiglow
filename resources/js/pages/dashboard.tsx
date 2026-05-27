@@ -67,7 +67,7 @@ function GreetingHeader({ name }: { name: string }) {
     return (
         <div className="px-4 pt-2 pb-1">
             <p className="text-muted-foreground text-sm">{greeting}</p>
-            <h1 className="text-xl font-semibold tracking-tight">{name} 👋</h1>
+            <h1 className="text-3xl font-thin tracking-tight">{name} 👋</h1>
         </div>
     );
 }

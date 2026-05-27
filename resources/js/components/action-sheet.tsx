@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import FrontendLayout from '@/layouts/frontend-layout';
+import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, type PanInfo } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -41,27 +40,75 @@ export default function ActionSheet({
     }, [open]);
 
     const [isExpanded, setIsExpanded] = useState(false);
-    const [canDrag, setCanDrag] = useState(true);
+
+    // ─── Drag intent refs ─────────────────────────────────────────────────────
+    const dragModeRef = useRef<'sheet' | 'scroll' | null>(null);
+    const scrollTopAtDragStart = useRef(0);
+    const dragDirectionRef = useRef<'up' | 'down' | null>(null);
+    const lastDragOffsetY = useRef(0);
+    const maxDragOffsetRef = useRef(0);
+    const contentRef = useRef<HTMLDivElement>(null);
+
+    const INTENT_THRESHOLD = 5;    // px — minimum move before committing to a mode
+    const CLOSE_THRESHOLD = 120;
 
     // Reset when sheet closes
     useEffect(() => {
         if (!open) {
             setIsExpanded(false);
-            setCanDrag(true);
+            dragModeRef.current = null;
         }
     }, [open]);
 
-    const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-        const { offset, velocity } = info;
-        if (velocity.y > 500) { onClose(); return; }
-        if (offset.y < -60) { setIsExpanded(true); return; }
-        if (offset.y > 150) {
-            isExpanded ? setIsExpanded(false) : onClose();
+    // ─── Drag handlers ────────────────────────────────────────────────────────
+
+    const handleDragStart = () => {
+        dragModeRef.current = null;
+        dragDirectionRef.current = null;
+        lastDragOffsetY.current = 0;
+        scrollTopAtDragStart.current = contentRef.current?.scrollTop ?? 0;
+        maxDragOffsetRef.current = 0;
+    };
+
+    const handleDrag = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+        const delta = info.offset.y - lastDragOffsetY.current;
+        dragDirectionRef.current = delta > 0 ? 'down' : 'up';
+        lastDragOffsetY.current = info.offset.y;
+        maxDragOffsetRef.current = Math.max(maxDragOffsetRef.current, info.offset.y);
+
+        // Commit to a mode once the gesture is intentional
+        if (dragModeRef.current === null && Math.abs(info.offset.y) > INTENT_THRESHOLD) {
+            const movingDown = info.offset.y > 0;
+            dragModeRef.current =
+                movingDown && scrollTopAtDragStart.current === 0 ? 'sheet' : 'scroll';
         }
     };
 
-    const handleContentScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        setCanDrag(e.currentTarget.scrollTop === 0);
+    const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+        const mode = dragModeRef.current;
+        dragModeRef.current = null;
+        lastDragOffsetY.current = 0;
+
+        const { offset, velocity } = info;
+        const isFastFlick = velocity.y > 450;
+        const isPastThreshold = offset.y > CLOSE_THRESHOLD;
+        const endedGoingUp = velocity.y < -100;
+        const userReversed = offset.y < maxDragOffsetRef.current - 30;
+
+        // Scroll mode — close only if fast flick down while already at top
+        if (mode === 'scroll') {
+            if (isFastFlick && scrollTopAtDragStart.current === 0) {
+                isExpanded ? setIsExpanded(false) : onClose();
+            }
+            return;
+        }
+
+        // User ended gesture going up → stay open, even if past threshold
+        if (endedGoingUp || userReversed) return;
+
+        if (isPastThreshold || isFastFlick) {
+            isExpanded ? setIsExpanded(false) : onClose();
+        }
     };
 
     return createPortal(
@@ -86,15 +133,29 @@ export default function ActionSheet({
                         initial={{ y: '100%' }}
                         animate={{ y: 0, maxHeight: isExpanded ? '90vh' : '58vh' }}
                         exit={{ y: '100%' }}
+                        layout
                         transition={{
-                            type: 'spring',
-                            damping: 30,
-                            stiffness: 300,
+                            y: {
+                                type: 'spring',
+                                damping: 30,
+                                stiffness: 320,
+                                mass: 0.8
+                            },
+                            maxHeight: {
+                                type: 'tween',
+                                duration: 0.22,
+                                ease: 'easeOut'
+                            }
                         }}
-                        drag={canDrag ? 'y' : false}
+                        drag="y"
                         dragConstraints={{ top: 0, bottom: 0 }}
-                        dragElastic={{ top: 0, bottom: 0.4 }}
+                        dragElastic={{
+                            top: 0,
+                            bottom: 0.85
+                        }}
                         dragMomentum={false}
+                        onDragStart={handleDragStart}
+                        onDrag={handleDrag}
                         onDragEnd={handleDragEnd}
                         className={cn(
                             'fixed bottom-0 left-0 right-0 z-50',
@@ -107,13 +168,13 @@ export default function ActionSheet({
                         aria-label={title}
                     >
                         {/* Handle bar */}
-                        <div className="flex justify-center pt-4 pb-10 flex-shrink-0">
+                        <div className="flex justify-center pt-4 pb-8 flex-shrink-0">
                             <div className="h-1 w-12 rounded-full bg-muted-foreground/30" />
                         </div>
 
                         {/* Header */}
                         {(title) && (
-                            <div className="flex items-start justify-center px-8 pb-10 flex-shrink-0">
+                            <div className="flex items-start justify-center px-8 pb-8 flex-shrink-0">
                                 {title && (
                                     <h3 className="font-tracking-tight text-2xl text-foreground">
                                         {title}
@@ -124,8 +185,8 @@ export default function ActionSheet({
 
                         {/* Content */}
                         <div
+                            ref={contentRef}
                             className="overflow-y-auto flex-1 px-8"
-                            onScroll={handleContentScroll}
                         >
                             {children}
                         </div>
@@ -149,7 +210,7 @@ export default function ActionSheet({
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
                         className={cn(
-                            'hidden md:flex', // Show only on desktop
+                            'hidden md:flex',
                             'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
                             'z-50 w-full max-w-lg',
                             'bg-background rounded-4xl shadow-2xl border',
